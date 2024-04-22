@@ -14,6 +14,7 @@
 ********************************************************************************************/
 
 #include "raylib.h"
+#include "cvar.h"
 
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>
@@ -22,8 +23,12 @@
 //----------------------------------------------------------------------------------
 // Global Variables Definition
 //----------------------------------------------------------------------------------
-int screenWidth = 800;
-int screenHeight = 450;
+const char*config_path = "config.cfg";
+tcvar_t<int> win_x = {"win_x",-1, CVAR_ARCHIVE};
+tcvar_t<int> win_y = {"win_y",-1, CVAR_ARCHIVE};
+tcvar_t<int> win_w = {"win_w",800, CVAR_ARCHIVE}; // GZDoom: -1
+tcvar_t<int> win_h = {"win_h",450, CVAR_ARCHIVE}; // GZDoom: -1
+tcvar_t<bool> win_maximized = {"win_maximized",false};
 
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
@@ -35,9 +40,12 @@ void UpdateDrawFrame(void);     // Update and Draw one frame
 //----------------------------------------------------------------------------------
 int main()
 {
+    FILE *config;
+
     // Initialization
     //--------------------------------------------------------------------------------------
-    InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
+    printf("%s: %d\n", win_w.name, win_w.integer);
+    InitWindow(win_w.integer, win_h.integer, "raylib [core] example - basic window");
 
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
@@ -56,6 +64,16 @@ int main()
     //--------------------------------------------------------------------------------------
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
+
+    if (config = fopen(config_path, "w"))
+    {
+        printf("# Configuration\n");
+        Cvar_WriteVariables(config);
+        if (fclose(config) == 0)
+        {
+            printf("Wrote %s\n", config_path);
+        }
+    }
 
     return 0;
 }
@@ -77,6 +95,8 @@ void UpdateDrawFrame(void)
         ClearBackground(RAYWHITE);
 
         DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
+
+        DrawText(win_w.name, 190, 220, 20, LIGHTGRAY);
 
     EndDrawing();
     //----------------------------------------------------------------------------------
