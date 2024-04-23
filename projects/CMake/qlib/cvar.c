@@ -1,21 +1,10 @@
 #include "cvar.h"
 #include "cmd.h"
+#include "console.h"
 
-#include <stdarg.h>
 #include <stdlib.h>
 
 static cvar_t *cvar_vars;
-
-int Con_Printf(const char *fmt, ...)
-{
-    va_list args;
-
-    va_start(args, fmt);
-    int n = vprintf(fmt, args);
-    va_end(args);
-
-    return n;
-}
 
 void Cvar_RegisterVariable(cvar_t *variable)
 {
@@ -54,12 +43,12 @@ void Cvar_RegisterVariable(cvar_t *variable)
     }
 
 #ifndef NDEBUG
-    //printf("%s \"%s\" (%f)\n", variable->name, variable->string, variable->value);
+    // printf("%s \"%s\" (%f)\n", variable->name, variable->string, variable->value);
 #endif
 
     // link the variable in
     variable->next = cvar_vars;
-    cvar_vars = variable;
+    cvar_vars      = variable;
 }
 
 void Cvar_WriteVariables(FILE *f)

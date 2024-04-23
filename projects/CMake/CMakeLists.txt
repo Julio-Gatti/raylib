@@ -25,10 +25,12 @@ endif()
 
 # Our Project
 
-add_library(cvar STATIC cmd.c cvar_.cpp cvar.c)
+add_subdirectory(qlib)
+include_directories(qlib)
+
 add_executable(${PROJECT_NAME} core_basic_window.cpp)
 #set(raylib_VERBOSE 1)
-target_link_libraries(${PROJECT_NAME} raylib cvar)
+target_link_libraries(${PROJECT_NAME} raylib qlib)
 
 # Web Configurations
 if (${PLATFORM} STREQUAL "Web")

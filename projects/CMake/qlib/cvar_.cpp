@@ -8,7 +8,7 @@ cvar_s::cvar_s(const char *name, const char *string, flags_t flags, const char *
     this->name = new char[cap];
     strncpy(this->name, name, cap);
 
-    cap = strlen(string) + 1;
+    cap          = strlen(string) + 1;
     this->string = new char[cap];
     strncpy(this->string, string, cap);
 
@@ -21,7 +21,7 @@ cvar_s::cvar_s(const char *name, const std::string &string, flags_t flags, const
     this->name = new char[cap];
     strncpy(this->name, name, cap);
 
-    cap = string.length() + 1;
+    cap          = string.length() + 1;
     this->string = new char[cap];
     strncpy(this->string, string.c_str(), cap);
 
@@ -30,8 +30,7 @@ cvar_s::cvar_s(const char *name, const std::string &string, flags_t flags, const
 
 cvar_s::~cvar_s()
 {
-    if (name)
-    {
+    if (name) {
         delete[] name;
     }
 }

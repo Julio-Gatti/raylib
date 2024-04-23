@@ -1,9 +1,7 @@
-# raylib based on just my observations
 ---
 Language: Cpp
 BasedOnStyle: LLVM
 AlignConsecutiveAssignments: Consecutive
-BreakBeforeBraces: Allman
+BreakBeforeBraces: Linux
 ColumnLimit: 0
-IndentPPDirectives: BeforeHash
 IndentWidth: 4
