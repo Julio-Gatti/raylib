@@ -7,16 +7,15 @@
 #include "quakedef.h"
 
 #if __cplusplus
-    #include <cstdio>
-    #include <cstring>
-    #include <string>
+#include <cstdio>
+#include <cstring>
+#include <string>
 #else
-    #include <stdio.h>
-    #include <string.h>
+#include <stdio.h>
+#include <string.h>
 #endif
 
-enum
-{
+enum {
     CVAR_ARCHIVE = 1 << 0,
     CVAR_SERVER  = 1 << 1,
     CVAR_INTEGER = 1 << 2,
@@ -27,12 +26,10 @@ enum
 };
 
 /// Console variable
-struct cvar_s
-{
+struct cvar_s {
     char *name;
     char *string;
-    union
-    {
+    union {
         struct
         {
             bool archive;
@@ -40,8 +37,7 @@ struct cvar_s
         };
         unsigned int flags;
     };
-    union
-    {
+    union {
         float value;
         int integer;
         bool boolean;
@@ -51,12 +47,20 @@ struct cvar_s
 #ifdef __cplusplus
     typedef unsigned int flags_t;
 
+    cvar_s(const cvar_s &) = delete;
     cvar_s(const char *name, const char *string, flags_t flags = 0, const char *description = "");
     cvar_s(const char *name, const std::string &string, flags_t flags = 0, const char *description = "");
     ~cvar_s();
 
+    cvar_s &operator=(const char *s) noexcept;
+    cvar_s &operator=(const std::string &s) noexcept;
+    cvar_s &operator=(float f) noexcept;
+    cvar_s &operator=(int i) noexcept;
+    cvar_s &operator=(bool b) noexcept;
+
     /// @name Type
     /// @{
+    const char *type_name() const noexcept;
     constexpr bool is_boolean() const noexcept { return flags & CVAR_BOOLEAN; }
     constexpr bool is_integer() const noexcept { return flags & CVAR_INTEGER; }
     constexpr bool is_float() const noexcept { return flags & CVAR_FLOAT; }
@@ -93,9 +97,9 @@ typedef struct cvar_s cvar_t;
 extern "C" {
 #endif
 
-    void Cvar_RegisterVariable(cvar_t *variable);
-    void Cvar_WriteVariables(FILE *f);
-    cvar_t *Cvar_FindVar(const char *var_name);
+void Cvar_RegisterVariable(cvar_t *variable);
+void Cvar_WriteVariables(FILE *f);
+cvar_t *Cvar_FindVar(const char *var_name);
 
 #if __cplusplus
 }
@@ -104,8 +108,7 @@ extern "C" {
 #ifdef __cplusplus
 /// Template console variable
 template <typename T>
-struct tcvar_t : public cvar_t
-{
+struct tcvar_t : cvar_t {
     using super      = cvar_t;
     using value_type = T;
 
@@ -120,5 +123,21 @@ struct tcvar_t : public cvar_t
 
     tcvar_t(const char *name, const char *string, flags_t flags = 0, const char *description = "")
         : super(name, string, flags, description) {}
+
+    tcvar_t &operator=(bool b) noexcept
+    {
+        super::operator=(b);
+        return *this;
+    }
+    tcvar_t &operator=(int i) noexcept
+    {
+        super::operator=(i);
+        return *this;
+    }
+    tcvar_t &operator=(float f) noexcept
+    {
+        super::operator=(f);
+        return *this;
+    }
 };
 #endif

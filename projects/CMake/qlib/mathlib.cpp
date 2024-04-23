@@ -89,7 +89,7 @@ std::string vec2::string() const
 
 std::string vec3::string() const
 {
-    char s[32];
+    char s[48];
 
     snprintf(s, sizeof(s), "\"%f %f %f\"", x, y, z);
 
@@ -98,7 +98,7 @@ std::string vec3::string() const
 
 std::string vec4::string() const
 {
-    char s[32];
+    char s[64];
 
     snprintf(s, sizeof(s), "\"%f %f %f %f\"", x, y, z, w);
 

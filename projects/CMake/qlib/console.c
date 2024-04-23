@@ -1,5 +1,6 @@
 #include "console.h"
 #include "cmd.h"
+#include "cvar.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -12,6 +13,56 @@ BOOL SetConsoleTextAttribute(HANDLE hConsoleOutput, WORD wAttributes)
 {
 }
 #endif
+
+const char *con_input_prefix = "]";
+
+int Con_Tokenize(char *c, char *argv[], size_t argmax)
+{
+    assert(c != NULL);
+
+    int argc = 0;
+
+    // assume some kind of termination
+    for (; *c; ++c) {
+        // CR or LF
+        if (*c == '\r' || *c == '\n') {
+            *c = '\0';
+            return argc;
+        }
+        // single line comment
+        else if (*c == '#') {
+            *c = '\0';
+            return argc;
+        }
+        // whitespace
+        else if (*c == ' ' || *c == '\t') {
+            // skip until
+            *c = '\0';
+            continue;
+        }
+        // normal character
+        else {
+            // argument
+            if (argc < argmax) {
+                argv[argc++] = c;
+                for (; *c; ++c) {
+                    // CR or LF
+                    if (*c == '\r' || *c == '\n') {
+                        *c = '\0';
+                        return argc;
+                    }
+                    // whitespace
+                    else if (*c == ' ' || *c == '\t') {
+                        *c = '\0';
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return argc;
+}
 
 int Con_Printf(const char *fmt, ...)
 {
@@ -32,8 +83,8 @@ void Con_Submit(char *input, size_t size, uint *len)
         return;
     }
 
-    int argc     = 1;
-    char *argv[] = {input};
+    char *argv[32];
+    int argc = Con_Tokenize(input, argv, sizeof(argv) / sizeof(argv[0]));
 
     for (cmd_function_t *cmd = cmd_functions; cmd; cmd = cmd->next) {
         if (strcasecmp(cmd->name, input) == 0) {
@@ -44,6 +95,30 @@ void Con_Submit(char *input, size_t size, uint *len)
             }
             return;
         }
+    }
+
+    cvar_t *var = Cvar_FindVar(argv[0]);
+    if (var) {
+        if (argc > 1) {
+            free(var->string);
+            size_t size = strlen(argv[1] + 1);
+            var->string = malloc(size);
+            strncpy(var->string, argv[1], size);
+            if (var->flags & CVAR_FLOAT) {
+                var->value = atof(var->string);
+            } else if (var->flags & CVAR_BOOLEAN) {
+                var->boolean = var->string[0] != 'f';
+            } else {
+                var->integer = atoi(var->string);
+            }
+        } else {
+            Con_Printf("%s is \"%s\"\n", var->name, var->string);
+        }
+        memset(input, '\0', size);
+        if (len) {
+            *len = '\0';
+        }
+        return;
     }
 
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN);

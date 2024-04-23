@@ -432,11 +432,19 @@ typedef struct RayCollision {
     Vector3 normal;         // Surface normal of hit
 } RayCollision;
 
-// BoundingBox
-typedef struct BoundingBox {
-    Vector3 min;            // Minimum vertex box-corner
-    Vector3 max;            // Maximum vertex box-corner
-} BoundingBox;
+/// `BoundingBox`
+struct BoundingBox {
+    Vector3 min;            ///< Minimum vertex box-corner
+    Vector3 max;            ///< Maximum vertex box-corner
+
+#ifdef __cplusplus
+    /// Check collision between two bounding boxes
+    bool intersects(const BoundingBox &box2) const noexcept;
+    /// Check collision between box and sphere
+    bool intersects(const Vector3 &center, float radius) const noexcept;
+#endif
+};
+typedef struct BoundingBox BoundingBox;
 
 // Wave, audio wave data
 typedef struct Wave {
@@ -1671,6 +1679,16 @@ RLAPI void AttachAudioMixedProcessor(AudioCallback processor); // Attach audio s
 RLAPI void DetachAudioMixedProcessor(AudioCallback processor); // Detach audio stream processor from the entire audio pipeline
 
 #if defined(__cplusplus)
+}
+#endif
+
+#ifdef __cplusplus
+inline bool BoundingBox::intersects(const BoundingBox &box2) const noexcept {
+    return CheckCollisionBoxes(*this, box2);
+}
+
+inline bool BoundingBox::intersects(const Vector3 &center, float radius) const noexcept {
+    return CheckCollisionBoxSphere(*this, center, radius);
 }
 #endif
 

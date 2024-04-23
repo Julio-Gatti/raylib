@@ -28,9 +28,10 @@
 const char* config_path = "config.cfg";
 tcvar_t<int> win_x = {"win_x",-1, CVAR_ARCHIVE, "window x position"};
 tcvar_t<int> win_y = {"win_y",-1, CVAR_ARCHIVE, "window y position"};
-tcvar_t<int> win_w = {"win_w",800, CVAR_ARCHIVE, "window width"}; // GZDoom: -1
-tcvar_t<int> win_h = {"win_h",450, CVAR_ARCHIVE, "window height"}; // GZDoom: -1
+tcvar_t<int> win_w = {"win_w",1280, CVAR_ARCHIVE, "window width"}; // GZDoom: -1
+tcvar_t<int> win_h = {"win_h",720, CVAR_ARCHIVE, "window height"}; // GZDoom: -1
 tcvar_t<bool> win_maximized = {"win_maximized",false, CVAR_ARCHIVE, "window maximized?"};
+Camera camera;
 
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
@@ -101,11 +102,20 @@ int main()
     //--------------------------------------------------------------------------------------
     printf("%s: %d\n", win_w.name, win_w.integer);
     InitWindow(win_w.integer, win_h.integer, "raylib [core] example - basic window");
+    Vector2 pos = GetWindowPosition();
+    win_x = pos.x;
+    win_y = pos.y;
 
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
 #else
     SetTargetFPS(60);   // Set our game to run at 60 frames-per-second
+
+    camera.fovy=74;
+    camera.position={0, 0, -1};
+    camera.up={0,1,0};
+    camera.target={0,0,1};
+    camera.projection=CAMERA_PERSPECTIVE;
     //--------------------------------------------------------------------------------------
 
     // Main game loop
@@ -136,6 +146,32 @@ static void DrawConsole(char*input, size_t input_size, uint *p_input_len)
 
     assert(console_open);
 
+    if (IsKeyPressed(KEY_ENTER))
+    {
+        Con_Submit(input, input_size, p_input_len);
+    }
+    else if (IsKeyPressed(KEY_BACKSPACE) || IsKeyPressedRepeat(KEY_BACKSPACE))
+    {
+        if (*p_input_len)
+                input[--(*p_input_len)] = '\0';
+    }
+
+    if (pressed = GetKeyPressed())
+    {
+        if (pressed == KEY_ENTER)
+        {
+            
+        }
+        else if (pressed == KEY_BACKSPACE)
+        {
+            
+        }
+        else if (pressed == KEY_TAB)
+        {
+            Con_Complete(input, input_size, p_input_len);
+        }
+    }
+
     if (pressed = GetCharPressed())
     {
         // CR or LF
@@ -154,28 +190,17 @@ static void DrawConsole(char*input, size_t input_size, uint *p_input_len)
         }
     }
 
-    if (pressed = GetKeyPressed())
-    {
-        if (pressed == KEY_ENTER)
-        {
-            Con_Submit(input, input_size, p_input_len);
-        }
-        else if (pressed == KEY_BACKSPACE)
-        {
-            if (*p_input_len)
-            {
-                input[--(*p_input_len)] = '\0';
-            }
-        }
-        else if (pressed == KEY_TAB)
-        {
-            Con_Complete(input, input_size, p_input_len);
-        }
-    }
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight() / 2, {0,0,0,192});
 
-    DrawText(input, 10, 120, 20, LIGHTGRAY);
+    int fontSize = 20;
+    int padding = 1;
+    int y = (GetScreenHeight() / 2) - fontSize - padding;
 
-    DrawText("raylib " RAYLIB_VERSION, 210, 120, 20, LIGHTGRAY);
+    DrawText(con_input_prefix, padding, y, fontSize, GRAY);
+
+    DrawText(input, padding + 7, y, fontSize, LIGHTGRAY);
+
+    DrawText("qlib " __DATE__, GetScreenWidth() - 120, GetScreenHeight() / 2 - fontSize, fontSize, GRAY);
 }
 
 static void DrawConsole()
@@ -193,10 +218,10 @@ void UpdateDrawFrame(void)
 {
     // Update
     //----------------------------------------------------------------------------------
-    // TODO: Update your variables here
+    UpdateCamera(&camera, CAMERA_CUSTOM);
     //----------------------------------------------------------------------------------
 
-    int pressed=GetKeyPressed();
+    int pressed = GetKeyPressed();
     if (pressed == KEY_TILDE)
         console_open = !console_open;
 
@@ -204,9 +229,16 @@ void UpdateDrawFrame(void)
     //----------------------------------------------------------------------------------
     BeginDrawing();
 
-        ClearBackground(RAYWHITE);
+        ClearBackground(BLACK);
+
+        DrawGrid(32, 1.0);
+        DrawLine3D({-10000, 0, 0}, {10000, 0, 0}, RED);
+        DrawLine3D({0, -10000, 0}, {0, 10000, 0}, GREEN);
+        DrawLine3D({0, 0, -10000}, {0, 0, 10000}, BLUE);
 
         DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
+
+        DrawFPS(0, 0);
 
         if (console_open)
             DrawConsole();
